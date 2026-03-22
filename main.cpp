@@ -59,41 +59,44 @@ int main(){
                                 std::cin >> choiceBattle;
                                 std::cout << "You have chosen opponent " << enemyMonsters[choiceBattle - 1].getName() << "!" << std::endl;
                         
+                                Monster activeEnemy = enemyMonsters[choiceBattle - 1];   
+
                                 playerTurn = (rand() % 2) + 1; // Randomly decide who goes first (1 for player, 2 for enemy)
 
-                                while (player->hasAliveMonsters() && enemyMonsters[choiceBattle - 1].isAlive()) {
-                                     if (playerTurn == 1) {
+                                while (player->hasAliveMonsters() && activeEnemy.isAlive()) {
+                                     if (playerTurn == 1) { // Player's turn
                                         std::cout << "Player's turn!" << std::endl;
                                         for (size_t i = 0; i < player->getMonsters().size(); ++i) {
                                             if (player->getMonsters()[i].isAlive()) {
-                                            const_cast<Monster&>(player->getMonsters()[i]).attack(enemyMonsters[choiceBattle - 1]);
-                                        break;
+                                            const_cast<Monster&>(player->getMonsters()[i]).attack(activeEnemy);
+                
                                         }
+                                    }
+                                    if (!player->hasAliveMonsters()) {
+                                        std::cout << "You have been defeated!" << std::endl;
+                                        break;
                                     }
                                     playerTurn = 2;
-                                    } else if (playerTurn == 2) {
+
+                                    } else if (playerTurn == 2) { // Enemy's turn
                                         std::cout << "Enemy's turn!" << std::endl;
-                                        enemyMonsters[choiceBattle - 1].attack(const_cast<Monster&>(player->getMonsters()[0]));
+                                        activeEnemy.attack(const_cast<Monster&>(player->getMonsters()[0]));
                                         for (size_t i = 0; i < player->getMonsters().size(); ++i) {
                                             if (player->getMonsters()[i].isAlive()) {
-                                            enemyMonsters[choiceBattle - 1].attack(const_cast<Monster&>(player->getMonsters()[i]));
-                                        break;
+                                            activeEnemy.attack(const_cast<Monster&>(player->getMonsters()[i]));    
                                         }
                                     }
+                                    if (!activeEnemy.isAlive()) {
+                                        std::cout << "You have defeated the enemy!" << std::endl;
+                                        break;
+                                    }
                                     playerTurn = 1;
-
-                            } else if (!player->hasAliveMonsters()) {
-                                std::cout << "You have been defeated!" << std::endl;
-                                break;
-
-                            } else if (!enemyMonsters[choiceBattle - 1].isAlive()) {
-                                std::cout << "You have defeated the enemy!" << std::endl
-                                    << "You can now choose to keep the enemys monster" << std::endl
-                                    << "1. Yes" << std::endl
-                                    << "2. No" << std::endl;
-                                    break;
                             }
-                            } 
+                        } 
+                            std::cout << "You can now choose to keep the enemys monster" << std::endl
+                                        << "1. Yes" << std::endl
+                                        << "2. No" << std::endl;
+
                             std::cin >> choiceKeepMonster; // Ask the player if they want to keep the defeated enemy monster
 
                             if (choiceKeepMonster == 1) {
