@@ -2,7 +2,7 @@
 #define Status_H
 #include <string>
 
-enum class StatusType { POISON, FROZEN, PARALYZED, STUNNED, CURSED, NONE };
+enum class StatusType { POISON, FROZEN, CONFUSED, BLEEDING, CURSED, NONE, STRENGTH_BUFF, DEFENSE_BUFF, SPEED_BUFF };
 
 class Status {
 public:

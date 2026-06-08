@@ -32,9 +32,6 @@ public:
 
     const std::vector<Status>& getActiveStatuses() const;
 
-
-
-
 private:
     std::string name;
     int health;

@@ -22,12 +22,19 @@ std::string Status::getStatusName() const {
             return "Poison";
         case StatusType::FROZEN:
             return "Frozen";
-        case StatusType::PARALYZED:
-            return "Paralyzed";
-        case StatusType::STUNNED:
-            return "Stunned";
+        case StatusType::CONFUSED:
+            return "Confused";
+        case StatusType::BLEEDING:
+            return "Bleeding";
         case StatusType::CURSED:
             return "Cursed";
+        case StatusType::STRENGTH_BUFF:
+            return "Strength Buff";
+        case StatusType::DEFENSE_BUFF:
+            return "Defense Buff";
+        case StatusType::SPEED_BUFF:
+            return "Speed Buff";
+
         default:
             return "None";
     }
