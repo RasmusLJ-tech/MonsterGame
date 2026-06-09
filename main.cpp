@@ -4,6 +4,7 @@
 #include <stdlib.h> // For rand() and srand()
 #include <iomanip>
 #include "BattleEngine.h"
+#include "Dungeon.h"
 
 int main(){
     int choiceMenu, choiceInsideGame, choiceBattle, playerTurn, choiceKeepMonster, replaceIndex;
@@ -14,7 +15,6 @@ int main(){
     // Create a pool of concrete items tied to your status effects
     // Format: Item(name, damage, statusType, duration, chance)
     Item healthPotion("Health Potion", -15, StatusType::NONE, 0, 0);       // Heals your active monster
-    Item antidote("Antidote", 0, StatusType::NONE, 0, 0);                  // Cures poison and bleeding statuses
     Item poisonDagger("Poison Dagger", 2, StatusType::POISON, 3, 100);     // Inflicts Poison (2 damage/turn)
     Item iceBomb("Ice Bomb", 1, StatusType::FROZEN, 1, 100);               // Inflicts Frozen (Stun/Skip turn)
     Item smokeBomb("Smoke Bomb", 0, StatusType::CONFUSED, 2, 80);          // 80% chance to Conflict Confused
@@ -56,112 +56,111 @@ int main(){
             } else {
 
                 while (player->hasAliveMonsters()) {
-                    std::cout << "\nGame is running..." << std::endl
-                                << "1. Battle" << std::endl
-                                << "2. Exit to Main Menu" << std::endl;
+                    std::cout << "\nGame is running..." << std::endl;
+                    std::cout << "1. Battle" << std::endl;
+                    std::cout << "2. Exit to Main Menu" << std::endl;
                     std::cin >> choiceInsideGame;
 
                     if (choiceInsideGame == 1) {
-                        // Team and Inventory Display: Show player's current monsters and items before battle to help them strategize
-                        std::cout << "\n--- YOUR TEAM ---" << std::endl;
+                        // Display Active Roster stats before combat selection
+                        std::cout << "\n--- YOUR SQUAD ---" << std::endl;
                         for (const Monster& monster : player->getMonsters()) {
                             std::cout << "- " << monster.getName() << " (HP: " << monster.getHealth() << ", Attack: " << monster.getAttackPower() << ")" << std::endl;
                         }
 
+                        // Display Player Inventory contents before selecting difficulty
                         std::cout << "--- YOUR INVENTORY ---" << std::endl;
                         if (player->getItems().empty()) {
-                            std::cout << " [Empty]" << std::endl;
+                            std::cout << " [Empty Inventory Bag]" << std::endl;
                         } else {
                             for (size_t i = 0; i < player->getItems().size(); ++i) {
                                 std::cout << " - " << player->getItems()[i].getName() << std::endl;
                             }
                         }
-                        // Enemy Selection: Let the player choose which enemy monster to battle from the pool of 7, each with different stats and difficulty
-                        std::cout << "You have entered a battle! These are your opponents:" << std::endl;
-                        for (size_t i = 0; i < enemyMonsters.size(); ++i) {
-                            std::cout << std::setw(15) << i + 1 << ". " << enemyMonsters[i].getName()
-                                      << std::setw(9) << " (HP: " << enemyMonsters[i].getHealth() 
-                                      << std::setw(14) << ", Attack: " << enemyMonsters[i].getAttackPower() << ")" << std::endl;
-                        }
-                        std::cout << "Choose your opponent (1-7): ";
-                        std::cin >> choiceBattle;
-                        
-                        if (choiceBattle < 1 || choiceBattle > 7) {
-                            std::cout << "Invalid opponent selection!" << std::endl;
+
+                        // Select customizable dungeon modifiers
+                        std::cout << "\nSelect Dungeon Difficulty:" << std::endl;
+                        std::cout << "1. Easy Grotte (1 Monster - Scaled Down)" << std::endl;
+                        std::cout << "2. Medium Grotte (2 Fights in a row - Normal Scaling)" << std::endl;
+                        std::cout << "3. Hard Grotte (3 Fights in a row - High Scaling!)" << std::endl;
+                        std::cout << "Choose difficulty setting (1-3): ";
+                        int diffChoice;
+                        std::cin >> diffChoice;
+
+                        if (diffChoice < 1 || diffChoice > 3) {
+                            std::cout << "Invalid setting selection!" << std::endl;
                             continue;
                         }
 
-                        Monster activeEnemy = enemyMonsters[choiceBattle - 1];   
+                        // Instantiate a scalable Dungeon dynamically tracking the player's team level metrics
+                        Dungeon dynamicDungeon("Mysterious Cavern", player->getTeamLevel(), diffChoice);
 
-                        bool playerWon = BattleEngine::startBattle(*player, activeEnemy);
+                        // Execute the back-to-back gauntlet interface
+                        bool dungeonCleared = BattleEngine::startDungeonBattle(*player, dynamicDungeon);
 
-                        if (playerWon) {
-                            std::cout << "\nCongratulations! You defeated " << activeEnemy.getName() << "!" << std::endl;
+                        if (dungeonCleared) {
+                            std::cout << "\nVICTORY! You completely cleared " << dynamicDungeon.getName() << "!" << std::endl;
                             
-                            // LOOT SYSTEM: Reward the player with an item upon winning
-                            int lootRoll = rand() % 4;
-                            Item droppedItem = healthPotion; // Default drop
+                            // Distribute rewards out of a dynamic loot chance generator
+                            int lootRoll = rand() % 5;
+                            Item droppedItem = healthPotion;
                             if (lootRoll == 1) droppedItem = poisonDagger;
-                            if (lootRoll == 2) droppedItem = adrenalineShot;
-                            if (lootRoll == 3) droppedItem = jaggedSpear;
+                            if (lootRoll == 2) droppedItem = iceBomb;
+                            if (lootRoll == 3) droppedItem = smokeBomb;
+                            if (lootRoll == 4) droppedItem = adrenalineShot;
+                            if (lootRoll == 5) droppedItem = jaggedSpear;
 
-                            std::cout << "The defeated monster dropped a [" << droppedItem.getName() << "]!" << std::endl;
-                            
-                            std::cout << "The defeated monster dropped a [" << droppedItem.getName() << "]!" << std::endl;
-                            player->addItem(droppedItem); // Adds directly to player inventory!
-                            std::cout << "Added [" << droppedItem.getName() << "] to your inventory bag!" << std::endl;
+                            std::cout << "The dungeon reward chest contained a [" << droppedItem.getName() << "]!" << std::endl;
+                            player->addItem(droppedItem); // Transferred securely into character bag
+                            std::cout << "Added [" << droppedItem.getName() << "] into your shared inventory!" << std::endl;
 
-                            // POST-BATTLE HEALING: Revive and fully heal all player monsters so progression is sustainable
-                            std::cout << "Your team rests after the battle. All your monsters have been fully revived and healed!" << std::endl;
+                            // POST-BATTLE SQUAD RESTORATION (Wakes monsters up and heals them fully)
+                            std::cout << "Your party rests. All team monsters have been revived and fully healed!" << std::endl;
                             for (size_t i = 0; i < player->getMonsters().size(); ++i) {
-                                // We reset them to 4 HP since that's your starter monster base health
-                                const_cast<Monster&>(player->getMonsters()[i]).reviveAndHeal(4); 
+                                const_cast<Monster&>(player->getMonsters()[i]).takeDamage(-100); 
                             }
 
-                            // Capture mechanics
-                            std::cout << "\nYou can now choose to keep the enemy's monster:" << std::endl
-                                      << "1. Yes" << std::endl
-                                      << "2. No" << std::endl;
+                            // CAPTURE MECHANICS: Allow player to keep the last defeated dungeon boss/monster
+                            Monster lastDefeatedMonster = dynamicDungeon.getEnemies().back();
+                            std::cout << "\nYou can now choose to keep the defeated [" << lastDefeatedMonster.getName() << "]:" << std::endl;
+                            std::cout << "1. Yes\n2. No\nChoice: ";
                             std::cin >> choiceKeepMonster;
 
                             if (choiceKeepMonster == 1) {
                                 if (player->getMonsters().size() < 4) { 
-                                    player->addMonster(enemyMonsters[choiceBattle - 1]);
-                                    std::cout << "You have added " << enemyMonsters[choiceBattle - 1].getName() << " to your collection!" << std::endl;
+                                    // Room available, add directly
+                                    player->addMonster(lastDefeatedMonster);
+                                    std::cout << "Successfully added " << lastDefeatedMonster.getName() << " to your team!" << std::endl;
                                 } else { 
-                                    std::cout << "You already have 4 monsters. Please replace one of your existing monsters." << std::endl;
-                                    std::cout << "Your current monsters:" << std::endl;
+                                    // Team full, must choose a replacement target index
+                                    std::cout << "Your squad is full (Max 4). Choose a monster to replace:" << std::endl;
                                     for (size_t i = 0; i < player->getMonsters().size(); ++i) {
                                         std::cout << i + 1 << ". " << player->getMonsters()[i].getName() 
                                                   << " (HP: " << player->getMonsters()[i].getHealth() 
                                                   << ", Attack: " << player->getMonsters()[i].getAttackPower() << ")" << std::endl;
                                     }
-                                    std::cout << "Enter the number of the monster you want to replace (1-4): ";
+                                    std::cout << "Enter the number of the monster to replace (1-4): ";
                                     std::cin >> replaceIndex;
                                     if (replaceIndex >= 1 && replaceIndex <= 4) {
-                                        player->replaceMonster(replaceIndex - 1, enemyMonsters[choiceBattle - 1]);
-                                        std::cout << "You have replaced your monster with " << enemyMonsters[choiceBattle - 1].getName() << "!" << std::endl;
-                                    } else {
-                                        std::cout << "Invalid choice. You did not replace any monster." << std::endl;
+                                        player->replaceMonster(replaceIndex - 1, lastDefeatedMonster);
+                                        std::cout << "Replaced old team member with " << lastDefeatedMonster.getName() << "!" << std::endl;
                                     }
                                 }
-                            } else {
-                                std::cout << "You chose not to keep the monster." << std::endl;
                             }
 
                         } else { 
-                            std::cout << "You were defeated by " << activeEnemy.getName() << ". Better luck next time!" << std::endl;
+                            std::cout << "\nYou limped out of the cavern ruins in utter defeat..." << std::endl;
                             break; 
-                        }
-                    } else if (choiceInsideGame == 2) { 
+                        }        
+                    } else if (choiceInsideGame == 2) {
                         std::cout << "Exiting to Main Menu..." << std::endl;
-                        break; 
+                        break;
                     } else {
                         std::cout << "Invalid choice. Please try again." << std::endl;
                     }
-                }
-            }     
-            break;
+                } // End of while (player->hasAliveMonsters())
+            } // End of else (player != nullptr)
+            
         } else if (choiceMenu == 2) { 
             std::cout << "Creating a character..." << std::endl;
             std::cout << "Enter character name: ";
@@ -173,6 +172,8 @@ int main(){
 
             // Give the player a health potion in their inventory from the start
             player->addItem(healthPotion);
+            player->addItem(poisonDagger); 
+            player->addItem(iceBomb); 
             
             player->addMonster(monster1);
             player->addMonster(monster2);
@@ -188,7 +189,7 @@ int main(){
         } else {
             std::cout << "Invalid choice. Please try again." << std::endl;
         }
-    }
+    } // End of while(true)
     
     return 0;
 }

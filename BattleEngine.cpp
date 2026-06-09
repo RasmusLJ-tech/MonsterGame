@@ -2,146 +2,138 @@
 #include <iostream>
 #include <stdlib.h>
 
-bool BattleEngine::startBattle(Character& player, Monster& enemy) {
-    // FIX: Force player to always start first to ensure fair gameplay
-    int playerTurn = 1; 
+// Executes consecutive monster battles inside a single dungeon run
+bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
+    std::cout << "\n=================================================" << std::endl;
+    std::cout << " ENTERING DUNGEON: " << dungeon.getName() << std::endl;
+    std::cout << " Prepare to face " << dungeon.getEnemies().size() << " monsters in a row!" << std::endl;
+    std::cout << "=================================================" << std::endl;
 
-    // Battle loop - keeps running until either the player has no alive monsters or the enemy is defeated
-    while (player.hasAliveMonsters() && enemy.isAlive()) {
+    // Loop through all generated enemies sequentially
+    for (size_t monsterIndex = 0; monsterIndex < dungeon.getEnemies().size(); ++monsterIndex) {
+        Monster& enemy = dungeon.getEnemies()[monsterIndex];
         
-        // Find the first alive monster of the player to be the active one for this turn
-        Monster* activePlayerMonster = nullptr;
-        for (size_t i = 0; i < player.getMonsters().size(); ++i) {
-            if (player.getMonsters()[i].isAlive()) {
-                activePlayerMonster = &const_cast<Monster&>(player.getMonsters()[i]);
-                break;
+        std::cout << "\n>>> A wild " << enemy.getName() << " blocks your path! <<<" << std::endl;
+        int playerTurn = 1; // Player always acts first for fair initialization
+
+        // Active turn loop against the current single enemy target
+        while (player.hasAliveMonsters() && enemy.isAlive()) {
+            
+            // Fetch the player's first available alive monster
+            Monster* activePlayerMonster = nullptr;
+            for (size_t i = 0; i < player.getMonsters().size(); ++i) {
+                if (player.getMonsters()[i].isAlive()) {
+                    activePlayerMonster = &const_cast<Monster&>(player.getMonsters()[i]);
+                    break;
+                }
+            }
+
+            // Display current HP metrics for active combatants
+            std::cout << "\n================= BATTLE STATUS =================" << std::endl;
+            std::cout << " Active Player Monster: " << activePlayerMonster->getName() 
+                      << " (" << activePlayerMonster->getHealth() << " HP)" << std::endl;
+            std::cout << " Active Enemy Monster:  " << enemy.getName() 
+                      << " (" << enemy.getHealth() << " HP)" << std::endl;
+            std::cout << "=================================================" << std::endl;
+
+            if (playerTurn == 1) { // Player Action Phase
+                std::cout << "\n--- " << activePlayerMonster->getName() << "'s Turn ---" << std::endl;
+                
+                // Process ticks for active status effects before allowing choices
+                bool canAct = activePlayerMonster->processStatuses();
+                if (!canAct) {
+                    std::cout << activePlayerMonster->getName() << " cannot move this turn!" << std::endl;
+                    playerTurn = 2; 
+                    continue;
+                }
+
+                int actionChoice;
+                std::cout << "1. Attack\n2. Use Item\nChoose action: ";
+                std::cin >> actionChoice;
+
+                if (actionChoice == 1) {
+                    activePlayerMonster->attack(enemy);
+                    
+                    // Bleeding reaction check
+                    for (const auto& s : activePlayerMonster->getActiveStatuses()) {
+                        if (s.getType() == StatusType::BLEEDING) {
+                            std::cout << activePlayerMonster->getName() << " bleeds heavily and takes 2 extra damage!" << std::endl;
+                            activePlayerMonster->takeDamage(2);
+                        }
+                    }
+                    playerTurn = 2; 
+                } 
+                else if (actionChoice == 2) {
+                    // Check the global shared PLAYER inventory bag
+                    if (player.getItems().empty()) {
+                        std::cout << "Your inventory is empty! You waste your turn rummaging through your bag." << std::endl;
+                        playerTurn = 2;
+                    } else {
+                        std::cout << "\n--- Your Inventory ---" << std::endl;
+                        for (size_t i = 0; i < player.getItems().size(); ++i) {
+                            std::cout << i + 1 << ". " << player.getItems()[i].getName() << std::endl;
+                        }
+                        std::cout << "Select an item to use: ";
+                        int itemChoice;
+                        std::cin >> itemChoice;
+                        
+                        if (itemChoice >= 1 && itemChoice <= (int)player.getItems().size()) {
+                            Item chosenItem = player.getItems()[itemChoice - 1];
+                            
+                            // Dynamic target allocation interface
+                            std::cout << "Use [" << chosenItem.getName() << "] on:\n1. Your Active Monster\n2. The Enemy Target\nChoice: ";
+                            int targetChoice;
+                            std::cin >> targetChoice;
+
+                            if (targetChoice == 1) { // Apply attributes to your squad
+                                activePlayerMonster->takeDamage(chosenItem.getDamage());
+                                if (chosenItem.getStatusEffect() != StatusType::NONE && (rand() % 100) < chosenItem.getChance()) {
+                                    activePlayerMonster->addStatus(Status(chosenItem.getStatusEffect(), chosenItem.getStatusDuration()));
+                                }
+                            } else { // Cast attributes onto enemy target
+                                enemy.takeDamage(chosenItem.getDamage());
+                                if (chosenItem.getStatusEffect() != StatusType::NONE && (rand() % 100) < chosenItem.getChance()) {
+                                    enemy.addStatus(Status(chosenItem.getStatusEffect(), chosenItem.getStatusDuration()));
+                                }
+                            }
+                            // Consume the item from player inventory array
+                            player.removeItem(itemChoice - 1);
+                            playerTurn = 2;
+                        }
+                    }
+                }
+
+                // Speed buff extra round validator
+                for (const auto& s : activePlayerMonster->getActiveStatuses()) {
+                    if (s.getType() == StatusType::SPEED_BUFF && rand() % 100 < 30) {
+                        std::cout << activePlayerMonster->getName() << " utilizes lightning speed to secure an extra strike!" << std::endl;
+                        playerTurn = 1; 
+                    }
+                }
+
+            } else { // Enemy Action Phase
+                std::cout << "\n--- " << enemy.getName() << "'s Turn ---" << std::endl;
+                if (!enemy.processStatuses()) {
+                    playerTurn = 1;
+                    continue;
+                }
+                enemy.attack(*activePlayerMonster);
+                playerTurn = 1;
             }
         }
 
-        // Display current HP status for both active monsters at the start of every round
-        std::cout << "\n================= BATTLE STATUS =================" << std::endl;
-        std::cout << " Active Player Monster: " << activePlayerMonster->getName() 
-                  << " (" << activePlayerMonster->getHealth() << " HP)" << std::endl;
-        std::cout << " Active Enemy Monster:  " << enemy.getName() 
-                  << " (" << enemy.getHealth() << " HP)" << std::endl;
-        std::cout << "=================================================" << std::endl;
+        // Return failure immediately if the entire party goes down inside the dungeon
+        if (!player.hasAliveMonsters()) {
+            std::cout << "\nAll your monsters fainted! You failed to clear the dungeon..." << std::endl;
+            return false;
+        }
 
-        if (playerTurn == 1) { // Player's turn
-            std::cout << "\n--- " << activePlayerMonster->getName() << "'s Turn ---" << std::endl;
-            
-            // 1. Status effects are processed at the start of the turn, which may prevent action or cause damage
-            bool canAct = activePlayerMonster->processStatuses();
-            if (!canAct) {
-                std::cout << activePlayerMonster->getName() << " cannot move this turn!" << std::endl;
-                playerTurn = 2;
-                continue;
-            }
-
-            // 2. Battle menu (Attack or Item)
-            int actionChoice;
-            std::cout << "1. Attack\n2. Use Item\nChoose action: ";
-            std::cin >> actionChoice;
-
-            if (actionChoice == 1) {
-                // Original attack logic
-                activePlayerMonster->attack(enemy);
-                
-                // BLEEDING Logic: If the player's monster has the BLEEDING status, it takes extra damage after attacking
-                for (const auto& s : activePlayerMonster->getActiveStatuses()) {
-                    if (s.getType() == StatusType::BLEEDING) {
-                        std::cout << activePlayerMonster->getName() << " bleeds heavily from attacking and takes 2 extra damage!" << std::endl;
-                        activePlayerMonster->takeDamage(2);
-                    }
-                }
-            } else if (actionChoice == 2) {
-                //  Look inside the PLAYER'S items 
-                if (player.getItems().empty()) {
-                    std::cout << "Your inventory is empty! You waste your turn rummaging through your bag." << std::endl;
-                } else {
-                    std::cout << "\n--- Your Inventory ---" << std::endl;
-                    for (size_t i = 0; i < player.getItems().size(); ++i) {
-                        std::cout << i + 1 << ". " << player.getItems()[i].getName() << std::endl;
-                    }
-                    std::cout << "Select an item to use (or 0 to go back): ";
-                    int itemChoice;
-                    std::cin >> itemChoice;
-                    
-                    if (itemChoice >= 1 && itemChoice <= (int)player.getItems().size()) {
-                        Item chosenItem = player.getItems()[itemChoice - 1];
-                        
-                        // TARGET SELECTION MENU: Decide who to use it on
-                        std::cout << "\nWho do you want to use [" << chosenItem.getName() << "] on?" << std::endl;
-                        std::cout << "1. Your active monster (" << activePlayerMonster->getName() << ")" << std::endl;
-                        std::cout << "2. The enemy monster (" << enemy.getName() << ")" << std::endl;
-                        std::cout << "Choose target: ";
-                        int targetChoice;
-                        std::cin >> targetChoice;
-
-                        std::cout << "\nYou used [" << chosenItem.getName() << "]!" << std::endl;
-
-                        if (targetChoice == 1) { 
-                            // Target: YOUR OWN MONSTER (Healing / Buffs)
-                            // Negative damage means it subtracts a negative number (healing!)
-                            activePlayerMonster->takeDamage(chosenItem.getDamage());
-                            
-                            if (chosenItem.getStatusEffect() != StatusType::NONE) {
-                                if ((rand() % 100) < chosenItem.getChance()) {
-                                    Status newStatus(chosenItem.getStatusEffect(), chosenItem.getStatusDuration());
-                                    activePlayerMonster->addStatus(newStatus);
-                                    std::cout << activePlayerMonster->getName() << " gained " << newStatus.getStatusName() << "!" << std::endl;
-                                }
-                            }
-                        } 
-                        else { 
-                            // Target: THE ENEMY (Damage / Debuffs)
-                            enemy.takeDamage(chosenItem.getDamage());
-                            
-                            if (chosenItem.getStatusEffect() != StatusType::NONE) {
-                                if ((rand() % 100) < chosenItem.getChance()) {
-                                    Status newStatus(chosenItem.getStatusEffect(), chosenItem.getStatusDuration());
-                                    enemy.addStatus(newStatus);
-                                    std::cout << enemy.getName() << " was inflicted with " << newStatus.getStatusName() << "!" << std::endl;
-                                }
-                            }
-                        }
-
-                        // Remove the item from the player's shared bag after successful use
-                        player.removeItem(itemChoice - 1);
-                        playerTurn = 2; // End player's turn
-                    }
-                }
-            }
-
-            // 3. SPEED_BUFF Logic: If the player's monster has a SPEED_BUFF status, it has a chance to get an extra turn immediately after attacking
-            bool extraTurn = false;
-            for (const auto& s : activePlayerMonster->getActiveStatuses()) {
-                if (s.getType() == StatusType::SPEED_BUFF) {
-                    if (rand() % 100 < 50) { // 50% chance for extra attack
-                        std::cout << activePlayerMonster->getName() << " utilizes lightning speed to get an extra strike!" << std::endl;
-                        extraTurn = true;
-                    }
-                }
-            }
-
-            if (!extraTurn) {
-                playerTurn = 2; // Shift to enemy's turn if no extra turn is granted
-            }
-
-        } else { // Enemy's turn
-            std::cout << "\n--- " << enemy.getName() << "'s Turn ---" << std::endl;
-            
-            bool canAct = enemy.processStatuses();
-            if (!canAct) {
-                playerTurn = 1;
-                continue;
-            }
-
-            // Enemy attacks randomly one of the player's alive monsters
-            enemy.attack(*activePlayerMonster);
-            playerTurn = 1;
+        std::cout << "\nYou defeated " << enemy.getName() << "!" << std::endl;
+        if (monsterIndex < dungeon.getEnemies().size() - 1) {
+            std::cout << "Keep guard! The next dungeon guardian is stepping forward..." << std::endl;
         }
     }
 
-    // Return true if the player wins (enemy is defeated), false if the player loses (all player's monsters are defeated)
-    return enemy.getHealth() <= 0;
+    // Surviving all rounds triggers a true state for clean sweep clearance
+    return true;
 }
