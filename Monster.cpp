@@ -58,16 +58,9 @@ void Monster::attack(Monster& target) {
 }
 
 //Iteration 2 - added addItem and addStatus methods to allow monsters to gain items and status effects during the game, as well as getter methods to access these lists
-void Monster::addItem(const Item& item) {
-    items.push_back(item);
-}
 
 void Monster::addStatus(const Status& status) {
     activeStatuses.push_back(status);
-}
-
-const std::vector<Item>& Monster::getItems() const {
-    return items;
 }
 
 const std::vector<Status>& Monster::getActiveStatuses() const {

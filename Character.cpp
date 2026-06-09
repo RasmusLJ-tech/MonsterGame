@@ -46,3 +46,14 @@ void Character::removeItem(int index) {
 std::vector<Item>& Character::getItems() {
     return items;
 }
+
+int Character::getTeamLevel() const {
+    int totalStrength = 0;
+    if (monsters.empty()) return 1;
+    
+    for (const auto& monster : monsters) {
+        totalStrength += (monster.getHealth() + monster.getAttackPower());
+    }
+    // Returnerer et gennemsnit af dine monstres rå stats
+    return totalStrength / monsters.size();
+}

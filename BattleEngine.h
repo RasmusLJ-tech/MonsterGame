@@ -3,11 +3,12 @@
 
 #include "Character.h"
 #include "Monster.h"
+#include "Dungeon.h" 
 
 class BattleEngine {
 public:
-    // Returnerer true hvis spilleren vinder kampen, false hvis de taber
-    static bool startBattle(Character& player, Monster& enemy);
+    // Returns true if the player wins, false if they lose
+    static bool startDungeonBattle(Character& player, Dungeon& dungeon);
 };
 
 #endif

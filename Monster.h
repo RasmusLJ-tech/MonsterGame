@@ -21,16 +21,12 @@ public:
     int getHealth() const;
 
     int getAttackPower() const;
-
-    void addItem(const Item& item);
     
     void addStatus(const Status& status);
 
     bool processStatuses(); 
 
     void reviveAndHeal(int maxHealth);
-
-    const std::vector<Item>& getItems() const;
 
     const std::vector<Status>& getActiveStatuses() const;
 

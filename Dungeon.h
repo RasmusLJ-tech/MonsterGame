@@ -8,7 +8,7 @@
 
 class Dungeon {
 public:
-    // Generates a dungeon with a name
+    // Automatically spawns tailored enemies based on the player's roster strength and choices
     Dungeon(std::string name, int playerTeamLevel, int difficultySetting);
 
     std::string getName() const;
