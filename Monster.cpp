@@ -1,4 +1,6 @@
 #include "Monster.h"
+#include <vector>
+#include <iostream>
 
 Monster::Monster(const std::string& name, int health, int attackPower)
     : name(name), health(health), attackPower(attackPower) {}

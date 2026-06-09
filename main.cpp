@@ -3,6 +3,7 @@
 #include "Monster.h"
 #include <stdlib.h> // For rand() and srand()
 #include <iomanip>
+#include "BattleEngine.h"
 
 int main(){
     int choiceMenu, choiceInsideGame, choiceBattle, playerTurn, choiceKeepMonster, replaceIndex;
@@ -61,68 +62,48 @@ int main(){
                         
                                 Monster activeEnemy = enemyMonsters[choiceBattle - 1];   
 
-                                playerTurn = (rand() % 2) + 1; // Randomly decide who goes first (1 for player, 2 for enemy)
+                            bool playerWon = BattleEngine::startBattle(*player, activeEnemy);
 
-                                while (player->hasAliveMonsters() && activeEnemy.isAlive()) {
-                                     if (playerTurn == 1) { // Player's turn
-                                        std::cout << "Player's turn!" << std::endl;
-                                        for (size_t i = 0; i < player->getMonsters().size(); ++i) {
-                                            if (player->getMonsters()[i].isAlive()) {
-                                            const_cast<Monster&>(player->getMonsters()[i]).attack(activeEnemy);
-                
+                                // 2. Handle battle outcome: If the player wins, they get the option to keep the defeated monster; if they lose, they are informed and returned to the main menu
+                                if (playerWon) {
+                                    std::cout << "Congratulations! You defeated " << activeEnemy.getName() << "!" << std::endl;
+                                    
+                                    // Player gets the option to keep the defeated monster if they win
+                                    std::cout << "You can now choose to keep the enemys monster" << std::endl
+                                              << "1. Yes" << std::endl
+                                              << "2. No" << std::endl;
+
+                                    std::cin >> choiceKeepMonster;
+
+                                    if (choiceKeepMonster == 1) {
+                                        if (player->getMonsters().size() < 4) { // Space for new monster
+                                            player->addMonster(enemyMonsters[choiceBattle - 1]);
+                                            std::cout << "You have added " << enemyMonsters[choiceBattle - 1].getName() << " to your collection!" << std::endl;
+                                        } else { // Team is full, must replace an existing monster
+                                            std::cout << "You already have 4 monsters. Please replace one of your existing monsters." << std::endl;
+                                            std::cout << "Your current monsters:" << std::endl;
+                                            for (size_t i = 0; i < player->getMonsters().size(); ++i) {
+                                                std::cout << i + 1 << ". " << player->getMonsters()[i].getName() 
+                                                          << " (HP: " << player->getMonsters()[i].getHealth() 
+                                                          << ", Attack: " << player->getMonsters()[i].getAttackPower() << ")" << std::endl;
+                                            }
+                                            std::cout << "Enter the number of the monster you want to replace (1-4): ";
+                                            std::cin >> replaceIndex;
+                                            if (replaceIndex >= 1 && replaceIndex <= 4) {
+                                                player->replaceMonster(replaceIndex - 1, enemyMonsters[choiceBattle - 1]);
+                                                std::cout << "You have replaced your monster with " << enemyMonsters[choiceBattle - 1].getName() << "!" << std::endl;
+                                            } else {
+                                                std::cout << "Invalid choice. You did not replace any monster." << std::endl;
+                                            }
                                         }
-                                    }
-                                    if (!player->hasAliveMonsters()) {
-                                        std::cout << "You have been defeated!" << std::endl;
-                                        break;
-                                    }
-                                    playerTurn = 2;
-
-                                    } else if (playerTurn == 2) { // Enemy's turn
-                                        std::cout << "Enemy's turn!" << std::endl;
-                                        activeEnemy.attack(const_cast<Monster&>(player->getMonsters()[0]));
-                                        for (size_t i = 0; i < player->getMonsters().size(); ++i) {
-                                            if (player->getMonsters()[i].isAlive()) {
-                                            activeEnemy.attack(const_cast<Monster&>(player->getMonsters()[i]));    
-                                        }
-                                    }
-                                    if (!activeEnemy.isAlive()) {
-                                        std::cout << "You have defeated the enemy!" << std::endl;
-                                        break;
-                                    }
-                                    playerTurn = 1;
-                            }
-                        } 
-                            std::cout << "You can now choose to keep the enemys monster" << std::endl
-                                        << "1. Yes" << std::endl
-                                        << "2. No" << std::endl;
-
-                            std::cin >> choiceKeepMonster; // Ask the player if they want to keep the defeated enemy monster
-
-                            if (choiceKeepMonster == 1) {
-                                if (player->getMonsters().size() < 4) { // Check if the player has less than 4 monsters before adding the new one
-                                player->addMonster(enemyMonsters[choiceBattle - 1]);
-                                std::cout << "You have added " << enemyMonsters[choiceBattle - 1].getName() << " to your collection!" << std::endl;
-                                } else { // If the player already has 4 monsters, prompt them to replace one of their existing monsters
-                                    std::cout << "You already have 4 monsters. Please replace one of your existing monsters." << std::endl;
-                                    std::cout << "Your current monsters:" << std::endl;
-                                    for (size_t i = 0; i < player->getMonsters().size(); ++i) {
-                                        std::cout << i + 1 << ". " << player->getMonsters()[i].getName() 
-                                                  << " (HP: " << player->getMonsters()[i].getHealth() 
-                                                  << ", Attack: " << player->getMonsters()[i].getAttackPower() << ")" << std::endl;
-                                    }
-                                    std::cout << "Enter the number of the monster you want to replace (1-4): ";
-                                    std::cin >> replaceIndex;
-                                    if (replaceIndex >= 1 && replaceIndex <= 4) {
-                                        player->replaceMonster(replaceIndex - 1, enemyMonsters[choiceBattle - 1]);
-                                        std::cout << "You have replaced your monster with " << enemyMonsters[choiceBattle - 1].getName() << "!" << std::endl;
                                     } else {
-                                        std::cout << "Invalid choice. You did not replace any monster." << std::endl;
+                                        std::cout << "You chose not to keep the monster." << std::endl;
                                     }
+
+                                } else { // Player lost the battle
+                                    std::cout << "You were defeated by " << activeEnemy.getName() << ". Better luck next time!" << std::endl;
+                                    break; // Exit to main menu after losing a battle
                                 }
-                            } else {
-                                std::cout << "You chose not to keep the monster." << std::endl;
-                        }
                     
                 } else if (choiceInsideGame == 2) { // Exit to main menu (You are inside the game)
                     std::cout << "Exiting to Main Menu..." << std::endl;

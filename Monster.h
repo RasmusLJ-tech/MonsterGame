@@ -26,7 +26,7 @@ public:
     
     void addStatus(const Status& status);
 
-    void processStatuses(); 
+    bool processStatuses(); 
 
     const std::vector<Item>& getItems() const;
 
