@@ -128,5 +128,10 @@ bool Monster::processStatuses() {
     return canAct;
 }
 
+// Restores monster health and wipes away any ongoing combat statuses
+void Monster::reviveAndHeal(int maxHealth) {
+    health = maxHealth;
+    activeStatuses.clear(); // Clears poison, bleeding, etc. so they are fresh for the next fight
+}
 
 

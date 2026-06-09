@@ -28,6 +28,8 @@ public:
 
     bool processStatuses(); 
 
+    void reviveAndHeal(int maxHealth);
+
     const std::vector<Item>& getItems() const;
 
     const std::vector<Status>& getActiveStatuses() const;
