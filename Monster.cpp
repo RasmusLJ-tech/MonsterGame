@@ -53,12 +53,13 @@ bool Monster::isAlive() const {
 
 void Monster::attack(Monster& target) {
     if (isAlive()) {
-        target.takeDamage(attackPower);
+       int damageDealt = getAttackPower();
+        std::cout << name << " attacks " << target.getName() << " for " << damageDealt << " damage!" << std::endl; 
+        target.takeDamage(damageDealt);
     }
 }
 
 //Iteration 2 - added addItem and addStatus methods to allow monsters to gain items and status effects during the game, as well as getter methods to access these lists
-
 void Monster::addStatus(const Status& status) {
     activeStatuses.push_back(status);
 }

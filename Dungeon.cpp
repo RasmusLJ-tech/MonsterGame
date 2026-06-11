@@ -8,19 +8,33 @@ Dungeon::Dungeon(std::string name, int playerTeamLevel, int difficultySetting) :
     int numberOfEnemies = difficultySetting; // Easy = 1, Medium = 2, Hard = 3 number of enemies
     
     for (int i = 0; i < numberOfEnemies; ++i) {
-        // scaleFactor is based on both the player's team level and the difficulty setting, so monsters get stronger as the player progresses and chooses harder dungeons
-        int scaleFactor = playerTeamLevel * difficultySetting;
+        // Balanced stats multiplier based on player's current strength floor
+        int scaleFactor = playerTeamLevel;
         
-        int hp = (rand() % 5) + (scaleFactor * 2);      // Flere HP jo sværere
-        int attack = (rand() % 2) + (scaleFactor / 2) + 1; // Mere skade jo sværere
-        if (attack < 1) attack = 1;
+        int hp = 0;
+        int attack = 0;
 
+        // Balance configurations based on selected difficulty tier
         std::string monsterName = "Dungeon Goblin";
-        if (difficultySetting == 1) monsterName = "Weak Cave Imp";
-        if (difficultySetting == 2) monsterName = "Fierce Orc";
-        if (difficultySetting == 3) monsterName = "Grotto Overlord";
+        if (difficultySetting == 1) {
+            monsterName = "Weak Cave Imp";
+            hp = (rand() % 3) + 3;          // Easy enemies get around 3-5 HP
+            attack = 1;                     // Easy enemies deal exactly 1 damage
+        }
+        else if (difficultySetting == 2) {
+            monsterName = "Fierce Orc Warrior";
+            hp = (rand() % 4) + (scaleFactor + 2); 
+            attack = (rand() % 2) + (scaleFactor / 3) + 1;
+        }
+        else if (difficultySetting == 3) {
+            monsterName = "Grotto Overlord";
+            hp = (rand() % 6) + (scaleFactor * 2);  
+            attack = (rand() % 3) + (scaleFactor / 2) + 2;
+        }
 
-        // Adding a unique identifier to the monster name to differentiate multiple monsters in the same dungeon
+        if (attack < 1) attack = 1; // Safety boundary safeguard
+
+        // Push the balanced dynamic combatant into the dungeon queue vector
         enemies.push_back(Monster(monsterName + " #" + std::to_string(i + 1), hp, attack));
     }
 }

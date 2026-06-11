@@ -31,13 +31,13 @@ bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
             // Display current HP metrics for active combatants
             std::cout << "\n================= BATTLE STATUS =================" << std::endl;
             std::cout << " Active Player Monster: " << activePlayerMonster->getName() 
-                      << " (" << activePlayerMonster->getHealth() << " HP)" << std::endl;
+                      << " (" << activePlayerMonster->getHealth() << " HP)(" << activePlayerMonster->getAttackPower() << " AD)" << std::endl;
             std::cout << " Active Enemy Monster:  " << enemy.getName() 
-                      << " (" << enemy.getHealth() << " HP)" << std::endl;
+                      << " (" << enemy.getHealth() << " HP)(" << enemy.getAttackPower() << " AD)" << std::endl;
             std::cout << "=================================================" << std::endl;
 
             if (playerTurn == 1) { // Player Action Phase
-                std::cout << "\n--- " << activePlayerMonster->getName() << "'s Turn ---" << std::endl;
+                std::cout << "\n--- " << player.getName() << "'s " << activePlayerMonster->getName() << "'s Turn ---" << std::endl; 
                 
                 // Process ticks for active status effects before allowing choices
                 bool canAct = activePlayerMonster->processStatuses();
@@ -105,7 +105,7 @@ bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
 
                 // Speed buff extra round validator
                 for (const auto& s : activePlayerMonster->getActiveStatuses()) {
-                    if (s.getType() == StatusType::SPEED_BUFF && rand() % 100 < 30) {
+                    if (s.getType() == StatusType::SPEED_BUFF && rand() % 100 < 55) {
                         std::cout << activePlayerMonster->getName() << " utilizes lightning speed to secure an extra strike!" << std::endl;
                         playerTurn = 1; 
                     }
