@@ -1,6 +1,7 @@
 #include "BattleEngine.h"
 #include <iostream>
 #include <stdlib.h>
+#include "Database.h" // Ensure correct casing depending on your file name
 
 // Executes consecutive monster battles inside a single dungeon run
 bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
@@ -15,6 +16,8 @@ bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
         
         std::cout << "\n>>> A wild " << enemy.getName() << " blocks your path! <<<" << std::endl;
         int playerTurn = 1; // Player always acts first for fair initialization
+        
+        std::string currentlyLoggedMonster = ""; // Prevents logging the same monster every single turn
 
         // Active turn loop against the current single enemy target
         while (player.hasAliveMonsters() && enemy.isAlive()) {
@@ -27,6 +30,15 @@ bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
                     break;
                 }
             }
+
+            // --- DATABASE LOGGING: MONSTER USAGE ---
+            // Only log if we just swapped to a new monster (or started the battle)
+            if (currentlyLoggedMonster != activePlayerMonster->getName()) {
+                Database db("spildata.db");
+                db.incrementMonsterUsage(player.getName(), activePlayerMonster->getName());
+                currentlyLoggedMonster = activePlayerMonster->getName();
+            }
+            // ---------------------------------------
 
             // Display current HP metrics for active combatants
             std::cout << "\n================= BATTLE STATUS =================" << std::endl;
@@ -96,8 +108,22 @@ bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
                                     enemy.addStatus(Status(chosenItem.getStatusEffect(), chosenItem.getStatusDuration()));
                                 }
                             }
+
+                            // --- DATABASE LOGGING: ITEM USAGE ---
+                            // Check if the enemy died directly from the item usage
+                            bool resultedInKill = false;
+                            if (targetChoice == 2 && !enemy.isAlive()) {
+                                resultedInKill = true;
+                                std::cout << ">>> CRITICAL HIT! The item dealt a fatal blow! <<<" << std::endl;
+                            }
+                            
+                            Database db("spildata.db");
+                            db.incrementItemUsage(player.getName(), chosenItem.getName(), resultedInKill);
+                            // ------------------------------------
+
                             // Consume the item from player inventory array
                             player.removeItem(itemChoice - 1);
+                            
                             playerTurn = 2;
                         }
                     }
