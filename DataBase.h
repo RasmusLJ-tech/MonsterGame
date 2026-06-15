@@ -19,7 +19,7 @@ public:
     Database(const std::string& databaseName);
     ~Database();
 
-    // Opsætning
+    // Initializes the database tables if they don't exist
     void initializeDatabase();
 
     // Save & Load fuctions for Character data

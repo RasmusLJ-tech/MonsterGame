@@ -1,4 +1,4 @@
-#include "Database.h"
+#include "DataBase.h"
 
 // Constructor: Opens the database connection
 Database::Database(const std::string& databaseName) {

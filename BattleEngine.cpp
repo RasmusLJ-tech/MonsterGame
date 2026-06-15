@@ -1,7 +1,7 @@
 #include "BattleEngine.h"
 #include <iostream>
 #include <stdlib.h>
-#include "Database.h" // Ensure correct casing depending on your file name
+#include "DataBase.h" // Ensure correct casing depending on your file name
 
 // Executes consecutive monster battles inside a single dungeon run
 bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
