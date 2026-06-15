@@ -27,7 +27,7 @@ Dungeon::Dungeon(std::string name, int playerTeamLevel, int difficultySetting) :
             attack = (rand() % 2) + (scaleFactor / 3) + 1;
         }
         else if (difficultySetting == 3) {
-            monsterName = "Grotto Overlord";
+            monsterName = "Dungeon Overlord";
             hp = (rand() % 6) + (scaleFactor * 2);  
             attack = (rand() % 3) + (scaleFactor / 2) + 2;
         }

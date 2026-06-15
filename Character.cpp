@@ -32,7 +32,7 @@ const std::vector<Monster>& Character::getMonsters() const {
     return monsters;
 }
 
-// Nye inventory funktioner
+
 void Character::addItem(const Item& item) {
     items.push_back(item);
 }
@@ -54,6 +54,6 @@ int Character::getTeamLevel() const {
     for (const auto& monster : monsters) {
         totalStrength += (monster.getHealth() + monster.getAttackPower());
     }
-    // Returnerer et gennemsnit af dine monstres rå stats
+
     return totalStrength / monsters.size();
 }

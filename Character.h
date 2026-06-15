@@ -24,7 +24,7 @@ public:
 private:
     std::string name;
     std::vector<Monster> monsters; 
-    std::vector<Item> items; // Den fælles rygsæk
+    std::vector<Item> items; 
 };
 
 #endif

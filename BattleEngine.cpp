@@ -31,14 +31,14 @@ bool BattleEngine::startDungeonBattle(Character& player, Dungeon& dungeon) {
                 }
             }
 
-            // --- DATABASE LOGGING: MONSTER USAGE ---
+            // DATABASE LOGGING: MONSTER USAGE 
             // Only log if we just swapped to a new monster (or started the battle)
             if (currentlyLoggedMonster != activePlayerMonster->getName()) {
                 Database db("spildata.db");
                 db.incrementMonsterUsage(player.getName(), activePlayerMonster->getName());
                 currentlyLoggedMonster = activePlayerMonster->getName();
             }
-            // ---------------------------------------
+            
 
             // Display current HP metrics for active combatants
             std::cout << "\n================= BATTLE STATUS =================" << std::endl;

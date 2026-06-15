@@ -104,7 +104,7 @@ int main(){
                           
                                  size_t lootDropsCount = dynamicDungeon.getEnemies().size();
 
-                                // --- STATISTICS UPDATE ---
+                                // STATISTICS UPDATE 
                                 // 1. Update total kills based on the number of enemies in the dungeon
                                 for (size_t i = 0; i < lootDropsCount; ++i) {
                                        db.incrementGlobalKills();
