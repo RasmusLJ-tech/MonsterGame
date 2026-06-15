@@ -7,7 +7,7 @@
 #include <iomanip>
 #include "BattleEngine.h"
 #include "Dungeon.h"
-#include "Database.h"
+#include "DataBase.h"
 
 int main(){
     int choiceMenu, choiceInsideGame, choiceBattle, playerTurn, choiceKeepMonster, replaceIndex;
